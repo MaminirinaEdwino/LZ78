@@ -1,10 +1,8 @@
 package main
 
 import (
-	// "encoding/gob"
-	"encoding/gob"
+	"bytes"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 )
@@ -14,8 +12,8 @@ type Couple struct {
 	Caractere string
 }
 
-type CoupleByte struct{
-	Index byte
+type CoupleByte struct {
+	Index     byte
 	Caractere []byte
 }
 
@@ -71,11 +69,82 @@ func Encode(content string) []Couple {
 	return encodage
 }
 
+func CheckByteInTab(ByteTab [][]byte, curr []byte) bool {
+	for i := range ByteTab {
+		if bytes.Equal(ByteTab[i], curr) {
+			return true
+		}
+	}
+
+	return false
+}
+func GetByteIndexe(ByteTab [][]byte, cuur []byte) int {
+	for i := range len(ByteTab) {
+		if bytes.Equal(ByteTab[i], cuur) {
+			return i
+		}
+	}
+	return 0
+}
+
+func EncodeLZ78B(data []byte) ([]byte, []int) {
+	var ByteTab [][]byte
+	var Index []int
+	var EncodeByte []byte
+
+	var curr []byte
+
+	for i := range len(data) {
+		if !CheckByteInTab(ByteTab, curr) && len(curr) > 0 {
+			ByteTab = append(ByteTab, curr)
+			Index = append(Index, GetByteIndexe(ByteTab, curr[:len(curr)-1]))
+			EncodeByte = append(EncodeByte, curr[len(curr)-1])
+			curr = []byte{data[i]}
+		} else {
+			curr = append(curr, data[i])
+		}
+	}
+	Index = append(Index, GetByteIndexe(ByteTab, []byte{data[len(data)-1]}))
+	EncodeByte = append(EncodeByte, data[len(data)-1])
+
+	fmt.Println(string(EncodeByte))
+	fmt.Println(Index)
+	return EncodeByte, Index
+}
+
+func DecodeLZ78B(data []byte, index []int) {
+	var res [][]byte
+	for i := range data {
+		if index[i] > 0 {
+			tmp := []byte{}
+			if i < len(data) - 1 {
+				t := res[index[i]]
+				
+				// tmp = []byte{t..., data[i]}
+				for i := range t{
+					tmp = append(tmp, t[i])
+				}
+				tmp = append(tmp, data[i])
+			}else{
+				tmp = []byte{data[index[i]]}
+			}
+			res = append(res, tmp)
+		} else {
+			res = append(res, []byte{data[i]})
+		}
+	}
+	final := []byte{}
+	for i := range res {
+		final = append(final, res[i]...)
+	}
+	fmt.Println(string(final), "Binary")
+}
+
 func Decode(content []Couple) []string {
 	var res []string
 	for _, idx := range content[0:] {
 		if idx.Index > 0 {
-			res = append(res, res[idx.Index ]+idx.Caractere)
+			res = append(res, res[idx.Index]+idx.Caractere)
 			// fmt.Print(res[idx.Index]+idx.Caractere)
 		} else {
 			res = append(res, idx.Caractere)
@@ -83,7 +152,7 @@ func Decode(content []Couple) []string {
 		}
 
 	}
-	
+
 	return res
 }
 
@@ -91,7 +160,7 @@ func ConvertIntoByte(encodage []Couple) []CoupleByte {
 	var res []CoupleByte
 	for _, i := range encodage {
 		res = append(res, CoupleByte{
-			Index: byte(uint(i.Index)),
+			Index:     byte(uint(i.Index)),
 			Caractere: []byte(i.Caractere),
 		})
 	}
@@ -100,10 +169,8 @@ func ConvertIntoByte(encodage []Couple) []CoupleByte {
 
 func main() {
 	fmt.Println("LZ 78")
-	data, _ := os.ReadFile("texte.txt")  
-	encodage := Encode(string(data))
-	encodedFile, _ := os.OpenFile("encoded.ed", os.O_CREATE|os.O_RDONLY|os.O_RDWR, 0644)
-	encoder := gob.NewEncoder(encodedFile)
-	fmt.Println(encodage)
-	encoder.Encode(encodage)
+	// fmt.Println(append([]byte("A"), []byte("A")...))
+	data := "Exception lave be itto raha "
+	DecodeLZ78B(EncodeLZ78B([]byte(data)))
+	Decode(Encode(data))
 }
