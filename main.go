@@ -117,15 +117,15 @@ func DecodeLZ78B(data []byte, index []int) {
 	for i := range data {
 		if index[i] > 0 {
 			tmp := []byte{}
-			if i < len(data) - 1 {
+			if i < len(data)-1 {
 				t := res[index[i]]
-				
+
 				// tmp = []byte{t..., data[i]}
-				for i := range t{
+				for i := range t {
 					tmp = append(tmp, t[i])
 				}
 				tmp = append(tmp, data[i])
-			}else{
+			} else {
 				tmp = []byte{data[index[i]]}
 			}
 			res = append(res, tmp)
@@ -133,10 +133,13 @@ func DecodeLZ78B(data []byte, index []int) {
 			res = append(res, []byte{data[i]})
 		}
 	}
+	fmt.Println(string(res[len(res)-1]))
 	final := []byte{}
 	for i := range res {
+		fmt.Println(res[i])
 		final = append(final, res[i]...)
 	}
+	
 	fmt.Println(string(final), "Binary")
 }
 
@@ -170,7 +173,7 @@ func ConvertIntoByte(encodage []Couple) []CoupleByte {
 func main() {
 	fmt.Println("LZ 78")
 	// fmt.Println(append([]byte("A"), []byte("A")...))
-	data := "Exception lave be itto raha "
+	data := "Exception lave be ito raha y "
 	DecodeLZ78B(EncodeLZ78B([]byte(data)))
 	Decode(Encode(data))
 }
