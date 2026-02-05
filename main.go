@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
 	"slices"
 	"strings"
 )
@@ -112,7 +116,7 @@ func EncodeLZ78B(data []byte) ([]byte, []int) {
 	return EncodeByte, Index
 }
 
-func DecodeLZ78B(data []byte, index []int) {
+func DecodeLZ78B(data []byte, index []int) ([]byte) {
 	var res [][]byte
 	for i := range data {
 		if index[i] > 0 {
@@ -141,6 +145,7 @@ func DecodeLZ78B(data []byte, index []int) {
 	}
 	
 	fmt.Println(string(final), "Binary")
+	return final
 }
 
 func Decode(content []Couple) []string {
@@ -173,7 +178,50 @@ func ConvertIntoByte(encodage []Couple) []CoupleByte {
 func main() {
 	fmt.Println("LZ 78")
 	// fmt.Println(append([]byte("A"), []byte("A")...))
-	data := "Exception lave be ito raha y "
-	DecodeLZ78B(EncodeLZ78B([]byte(data)))
-	Decode(Encode(data))
+
+	// data, _ := os.ReadFile("1k.txt")
+	// encodedData, intData := EncodeLZ78B(data)
+	// // Decode(Encode(data))
+	// file, _ := os.Create("output.combyte")
+	// w := bufio.NewWriter(file)
+	// defer w.Flush()
+	
+
+	// binary.Write(w, binary.LittleEndian, int32(len(intData)))
+	// binary.Write(w, binary.LittleEndian, int32(len(encodedData)))
+	// for i := range intData {
+	// 	binary.Write(w, binary.LittleEndian, int32(intData[i]))
+	// }
+	// w.Write(encodedData)
+
+	file1, _ := os.Open("output.combyte")
+	r := bufio.NewReader(file1)
+
+	var lenIntData, lenEncodedData int32
+	var encodedInt []int
+	err := binary.Read(r, binary.LittleEndian, &lenIntData)
+	if err == io.EOF {
+		fmt.Println("Fin de Fichier")
+	}
+	err = binary.Read(r, binary.LittleEndian, &lenEncodedData)
+	if err == io.EOF {
+		panic(err)
+	}
+	encodedDataContent := make([]byte, lenEncodedData)
+
+
+	for range lenIntData{
+		var tmp int32
+		err = binary.Read(r, binary.LittleEndian, &tmp)
+		encodedInt = append(encodedInt, int(tmp))
+		if err == io.EOF {
+			break
+		}
+	}
+
+	_, err = io.ReadFull(r, encodedDataContent)
+	if err == io.EOF {
+		panic(err)
+	}
+	fmt.Println(string(DecodeLZ78B(encodedDataContent, encodedInt)))
 }
